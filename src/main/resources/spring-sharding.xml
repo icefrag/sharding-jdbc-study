@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:sharding="http://shardingsphere.apache.org/schema/shardingsphere/sharding"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/tx
+                        http://www.springframework.org/schema/tx/spring-tx.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://shardingsphere.apache.org/schema/shardingsphere/sharding
+                        http://shardingsphere.apache.org/schema/shardingsphere/sharding/sharding.xsd">
+
+
+    <bean id="ds0" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://192.168.169.101:3306/ds0"/>
+        <property name="username" value="miaosha"/>
+        <property name="password" value="a123456"/>
+    </bean>
+
+    <bean id="ds1" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://192.168.169.101:3306/ds1"/>
+        <property name="username" value="miaosha"/>
+        <property name="password" value="a123456"/>
+    </bean>
+
+    <sharding:inline-strategy id="databaseStrategy" sharding-column="user_id"
+                              algorithm-expression="ds$->{user_id % 2}"/>
+    <!--<sharding:inline-strategy id="orderTableStrategy" sharding-column="id" algorithm-expression="t_order$->{id % 2}" />-->
+    <bean id="torderRangeShardingAlgorithm" class="com.efrobot.xx.shardingalgorithm.TorderRangeShardingAlgorithm" />
+    <sharding:standard-strategy id="orderTableStrategy" sharding-column="id" precise-algorithm-ref="torderRangeShardingAlgorithm" range-algorithm-ref="torderRangeShardingAlgorithm"/>
+    <!--<sharding:inline-strategy id="orderItemTableStrategy" sharding-column="order_id" algorithm-expression="t_order_item$->{order_id % 2}" />-->
+
+    <sharding:key-generator id="orderKeyGenerator" type="SNOWFLAKE" column="id"/>
+
+    <sharding:data-source id="shardingDataSource">
+        <sharding:sharding-rule data-source-names="ds0,ds1" default-data-source-name="ds0">
+            <sharding:table-rules>
+                <sharding:table-rule logic-table="t_order" actual-data-nodes="ds$->{0..1}.t_order$->{0..1}"
+                                     database-strategy-ref="databaseStrategy" table-strategy-ref="orderTableStrategy"
+                                     key-generator-ref="orderKeyGenerator"/>
+                <!--<sharding:table-rule logic-table="t_order_item" actual-data-nodes="ds$->{0..1}.t_order_item$->{0..1}" database-strategy-ref="databaseStrategy" table-strategy-ref="orderItemTableStrategy" />-->
+            </sharding:table-rules>
+        </sharding:sharding-rule>
+        <sharding:props>
+            <prop key="sql.show">true</prop>
+        </sharding:props>
+    </sharding:data-source>
+
+    <!-- ========================================针对myBatis的配置项============================== -->
+    <!-- 配置sqlSessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 实例化sqlSessionFactory时需要使用上述配置好的数据源以及SQL映射文件 -->
+        <property name="dataSource" ref="shardingDataSource"/>
+        <!-- 扫描所有mapper -->
+        <property name="mapperLocations" value="classpath*:com/efrobot/*/baseapi/*/mapper/*.xml"/>
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageHelper">
+                    <property name="properties">
+                        <value>
+                            dialect=mysql
+                            reasonable=true
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+    <!-- 配置扫描器 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 扫描所有DAO -->
+        <property name="basePackage" value="com.efrobot.*.baseapi.*"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+    <!-- ========================================分隔线========================================= -->
+    <!-- 配置Spring的事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="shardingDataSource"/>
+    </bean>
+
+    <!--target class使用cglib针对类生效-->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+</beans>

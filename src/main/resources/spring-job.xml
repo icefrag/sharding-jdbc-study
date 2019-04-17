@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<!-- 获取微信token作业 -->
+	<bean id="getWXAccessTokenJob" class="com.evolvewx.job.GetWXAccessTokenJob" />
+	
+	<bean id="getWXAccessTokenJobMethod" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="getWXAccessTokenJob" />
+		</property>
+		<!-- 要执行的方法名称 -->
+		<property name="targetMethod">  
+			<value>execute</value>
+		</property>
+	</bean>
+	
+	<!-- ======================== 调度触发器 ======================== -->
+	<bean id="CronTriggerBean1" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="getWXAccessTokenJobMethod"></property>
+		<!--每隔30秒同步一次 -->
+		<property name="cronExpression" value="/30 * * * * ?"></property>
+	</bean>
+	<!-- ======================== 调度工厂 ======================== -->
+	<bean id="SpringJobSchedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="false">
+		<property name="triggers">
+			<list>
+				<!--wx token -->
+				<ref bean="CronTriggerBean1" />
+			</list>
+		</property>
+	</bean>	
+</beans>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"     
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"       
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans               
+           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd      
+           http://www.springframework.org/schema/context      
+           http://www.springframework.org/schema/context/spring-context-3.2.xsd     
+           http://www.springframework.org/schema/mvc      
+           http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+
+    <!-- 自动扫描(自动注入)，扫描service这个包以及它的子包的所有使用@Service注解标注的类 -->
+    <context:component-scan base-package="com.efrobot.*.*.service" />
+    
+    <!--作业调度引入 
+    <import resource="classpath:spring-job.xml" />    
+    -->
+    <!-- mybatis配置引入
+    <import resource="classpath:spring-mybatis.xml" />
+    -->
+
+    <import resource="classpath:spring-sharding.xml" />
+    <!-- spring-security配置引入
+    <import resource="classpath:spring-security.xml" />  
+     -->
+</beans>

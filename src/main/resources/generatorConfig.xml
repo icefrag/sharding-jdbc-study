@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration  
+      PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"  
+      "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+	<properties resource="database.properties" />
+	<!-- 如果你希望不生成和Example查询有关的内容，那么可以按照如下进行配置: -->
+	<context id="MysqlContext" defaultModelType="flat"
+		targetRuntime="MyBatis3">
+		<property name="beginningDelimiter" value="`" />
+		<property name="endingDelimiter" value="`" />
+
+		<!-- 生成的pojo序列化 -->
+		<plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
+
+		<!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+		<commentGenerator>
+			<property name="suppressAllComments" value="true" />
+		</commentGenerator>
+
+		<!-- jdbc连接配置 -->
+		<jdbcConnection driverClass="${driverClassNameNoLog4j}"
+			connectionURL="${jdbc_url_noLog}" userId="${jdbc_username}" password="${jdbc_password}">
+		</jdbcConnection>
+
+		<!-- java类型配置 -->
+		<javaTypeResolver>
+			<property name="forceBigDecimals" value="false" />
+		</javaTypeResolver>
+
+		<!-- generate Model -->  
+		<javaModelGenerator targetPackage="com.efrobot.xx.baseapi.module1.pojo"
+			targetProject="abator">
+			<property name="enableSubPackages" value="true" />
+			<property name="trimStrings" value="true" />
+		</javaModelGenerator>
+
+		<!-- generate xml -->
+		<sqlMapGenerator targetPackage="com.efrobot.xx.baseapi.module1.mapper"
+			targetProject="abator">
+			<property name="enableSubPackages" value="true" />
+		</sqlMapGenerator>
+
+		<!-- generate dao -->
+		<javaClientGenerator type="XMLMAPPER"
+			targetPackage="com.efrobot.xx.baseapi.module1" targetProject="abator">
+			<property name="enableSubPackages" value="true" />
+		</javaClientGenerator>
+		
+		<!-- 需要生成配置文件的表 -->
+		<table tableName="person" domainObjectName="Person"
+			enableCountByExample="false" enableUpdateByExample="false"
+			enableDeleteByExample="false" enableSelectByExample="false"
+			selectByExampleQueryId="false">
+			<!--generatedKey可以使insert方法获取到主键id,如果主键是自增长的(mysql)需要指定  identity=true-->
+			<generatedKey column="id" sqlStatement="Mysql" identity="true" />
+		</table>
+	</context>
+</generatorConfiguration>
